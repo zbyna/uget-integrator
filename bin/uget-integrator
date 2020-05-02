@@ -198,7 +198,10 @@ def read_message():
 
                 # Add the file name
                 if fileName:
-                    command.append("--filename=" + unquote(fileName))
+                    if sys.platform == 'win32':
+                        command.append("--filename=" + f'"{unquote(fileName)}"')
+                    else:
+                        command.append("--filename=" + unquote(fileName))
 
                 # Add the cookie file
                 if use_cookie_file:
@@ -209,7 +212,12 @@ def read_message():
 
                 logger.debug('Execute command: ' + str(command))
                 # Pass the parameters to uGet
-                subprocess.Popen(command, creationflags=creation_flags).wait()
+                if sys.platform == 'win32':
+                    subprocess.Popen(['powershell.exe', f"Start-Process '{command[0]}'",
+                                      f'''-ArgumentList ({ ','.join(f"'{item}'" for item in command[1:]) })'''],
+                                     creationflags=creation_flags).wait()
+                else:
+                    subprocess.Popen(command, creationflags=creation_flags).wait()
 
                 if use_cookie_file:
                     try:
